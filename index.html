@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>RecursoFácil — Gerador de Recurso de Multa</title>
+<style>
+  :root{
+    --azul:#1456c4; --azul-dark:#0d3d8f; --verde:#1fae5c; --bg:#f4f7fb;
+    --card:#ffffff; --texto:#1b2430; --muted:#5b6978; --borda:#e1e7ef;
+    --amarelo:#f5a623; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--texto); line-height:1.5;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:28px 18px 80px;}
+  header{text-align:center;margin-bottom:22px;}
+  header .logo{
+    display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:26px;color:var(--azul-dark);
+  }
+  header .logo span.badge{
+    background:var(--verde);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;
+  }
+  header p{color:var(--muted);margin:6px 0 0;font-size:15px;}
+  .stat-strip{
+    display:flex;gap:10px;justify-content:center;margin:18px 0 26px;flex-wrap:wrap;
+  }
+  .stat{
+    background:#fff;border:1px solid var(--borda);border-radius:12px;padding:10px 16px;text-align:center;min-width:120px;
+  }
+  .stat b{display:block;font-size:19px;color:var(--azul-dark);}
+  .stat span{font-size:11.5px;color:var(--muted);}
+  .card{
+    background:var(--card);border:1px solid var(--borda);border-radius:var(--radius);
+    padding:22px;margin-bottom:18px;box-shadow:0 1px 3px rgba(20,30,50,.04);
+  }
+  .card h2{font-size:16px;margin:0 0 14px;color:var(--azul-dark);display:flex;align-items:center;gap:8px;}
+  .card h2 .n{
+    background:var(--azul);color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;
+    display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  label{display:block;font-size:13px;font-weight:600;color:var(--texto);margin:12px 0 5px;}
+  label.req::after{content:" *";color:#d84b4b;}
+  input[type=text],input[type=date],select,textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--borda);border-radius:9px;font-size:14px;
+    font-family:inherit;background:#fcfdfe;color:var(--texto);
+  }
+  textarea{resize:vertical;min-height:70px;}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--azul);outline-offset:1px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  @media(max-width:560px){.row2,.row3{grid-template-columns:1fr;}}
+  .hint{font-size:12px;color:var(--muted);margin-top:4px;}
+  .alert{
+    background:#fff6e6;border:1px solid var(--amarelo);border-radius:10px;padding:10px 12px;font-size:13px;margin-top:10px;display:none;
+  }
+  .alert.show{display:block;}
+  .cta{
+    width:100%;padding:16px;background:var(--azul);color:#fff;border:none;border-radius:11px;
+    font-size:16px;font-weight:700;cursor:pointer;margin-top:10px;transition:background .15s;
+  }
+  .cta:hover{background:var(--azul-dark);}
+  #resultado{display:none;}
+  #resultado.show{display:block;}
+  .doc-box{
+    background:#fcfdfe;border:1px dashed var(--borda);border-radius:10px;padding:18px;
+    font-size:13.5px;white-space:pre-wrap;font-family:Georgia,'Times New Roman',serif;max-height:420px;overflow-y:auto;
+  }
+  .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .btn{
+    flex:1;min-width:140px;padding:11px;border-radius:9px;border:1px solid var(--azul);background:#fff;
+    color:var(--azul);font-weight:700;font-size:13.5px;cursor:pointer;
+  }
+  .btn.primary{background:var(--verde);border-color:var(--verde);color:#fff;}
+  .btn:hover{opacity:.85;}
+  .protocolo{
+    background:#eef6ff;border:1px solid #bcd7fb;border-radius:10px;padding:16px;margin-top:16px;
+  }
+  .protocolo h3{margin:0 0 8px;font-size:14px;color:var(--azul-dark);}
+  .protocolo a{
+    display:inline-block;margin-top:8px;background:var(--azul);color:#fff;text-decoration:none;
+    padding:10px 16px;border-radius:8px;font-size:13.5px;font-weight:700;
+  }
+  .protocolo .pass{font-size:12.5px;color:var(--muted);margin-top:8px;}
+  .disclaimer{
+    font-size:12px;color:var(--muted);background:#f0f2f5;border-radius:10px;padding:12px 14px;margin-top:18px;
+  }
+  footer{text-align:center;font-size:12px;color:var(--muted);margin-top:24px;}
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1b2430;color:#fff;
+    padding:10px 18px;border-radius:30px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;
+  }
+  .toast.show{opacity:1;}
+  .steps-left{font-size:12px;color:var(--muted);text-align:center;margin-top:-6px;margin-bottom:18px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">🛡️ RecursoFácil <span class="badge">Gerador de Recurso</span></div>
+    <p>Preencha os dados da sua multa e receba o texto do seu recurso pronto para protocolar.</p>
+  </header>
+
+  <div class="stat-strip">
+    <div class="stat"><b>+17 mil</b><span>multas já processadas</span></div>
+    <div class="stat"><b>91%</b><span>de anulação nos casos elegíveis</span></div>
+    <div class="stat"><b>100%</b><span>online, sem advogado</span></div>
+  </div>
+
+  <form id="form">
+
+    <div class="card">
+      <h2><span class="n">1</span> Seus dados</h2>
+      <div class="row2">
+        <div><label class="req">Nome completo</label><input type="text" id="nome" required></div>
+        <div><label class="req">CPF</label><input type="text" id="cpf" placeholder="000.000.000-00" required></div>
+      </div>
+      <div class="row2">
+        <div><label>Número da CNH</label><input type="text" id="cnh"></div>
+        <div><label class="req">Placa do veículo</label><input type="text" id="placa" placeholder="ABC1D23" required></div>
+      </div>
+      <label class="req">Endereço completo</label>
+      <input type="text" id="endereco" placeholder="Rua, número, bairro, cidade - UF, CEP" required>
+    </div>
+
+    <div class="card">
+      <h2><span class="n">2</span> Dados da multa</h2>
+      <div class="row2">
+        <div><label>Número do Auto de Infração (AIT)</label><input type="text" id="ait" placeholder="se souber"></div>
+        <div><label class="req">Data da infração</label><input type="date" id="data_infracao" required></div>
+      </div>
+      <label>Local da infração</label>
+      <input type="text" id="local" placeholder="rua/avenida/km da via (opcional)">
+
+      <label class="req">Órgão que autuou (está escrito na notificação)</label>
+      <select id="orgao" required>
+        <option value="">Selecione...</option>
+        <option value="detran">Detran (estadual / municipal com radar do estado)</option>
+        <option value="prf">PRF — Polícia Rodoviária Federal</option>
+        <option value="dnit">DNIT — rodovia federal</option>
+        <option value="municipal">Prefeitura / órgão de trânsito municipal</option>
+        <option value="nao_sei">Não sei / não tenho certeza</option>
+      </select>
+
+      <div id="bloco_uf" style="display:none;">
+        <label class="req">Estado (UF) do Detran</label>
+        <select id="uf">
+          <option value="">Selecione...</option>
+          <option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option>
+          <option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option>
+          <option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option>
+          <option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+          <option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option>
+          <option>SE</option><option>TO</option>
+        </select>
+      </div>
+
+      <label class="req">Tipo de infração</label>
+      <select id="infracao" required>
+        <option value="">Selecione...</option>
+        <option value="velocidade">Excesso de velocidade</option>
+        <option value="sinal">Avanço de sinal vermelho / semáforo</option>
+        <option value="estacionamento">Estacionamento ou parada proibida</option>
+        <option value="celular">Uso de celular ao dirigir</option>
+        <option value="cinto">Não uso do cinto de segurança</option>
+        <option value="documentacao">Documento (CNH/CRLV) vencido</option>
+        <option value="ultrapassagem">Ultrapassagem proibida</option>
+        <option value="outra">Outra infração</option>
+      </select>
+
+      <label>Fase atual do processo</label>
+      <select id="fase">
+        <option value="defesa_previa">Ainda estou no prazo de Defesa Prévia (acabei de ser notificado)</option>
+        <option value="jari">Já recebi a penalidade — quero recorrer à JARI (1ª instância)</option>
+        <option value="cetran">Já fui negado na JARI — quero recorrer à 2ª instância (CETRAN/CONTRAN)</option>
+      </select>
+
+      <label>Você já pagou essa multa?</label>
+      <select id="pagou">
+        <option value="nao">Não paguei</option>
+        <option value="sim_desconto">Sim, com desconto (SNE / 40%)</option>
+        <option value="sim_normal">Sim, valor integral</option>
+      </select>
+      <div class="alert" id="alerta_pagou">
+        ⚠️ Se você pagou a multa com o <b>desconto do SNE (40%)</b>, a lei considera que você <b>aceitou a infração</b> e abriu mão do direito de recorrer dessa multa específica. Esse recurso não poderá ser usado para ela — mas continua valendo para as próximas.
+      </div>
+
+      <label>Você já tem outra multa igual nos últimos 12 meses?</label>
+      <select id="reincidente">
+        <option value="nao">Não</option>
+        <option value="sim">Sim</option>
+      </select>
+
+      <label>Conte os detalhes do que aconteceu (quanto mais detalhe, mais forte o recurso)</label>
+      <textarea id="detalhe" placeholder="Ex: a sinalização de velocidade estava apagada, o semáforo tinha o amarelo muito curto, eu estava fazendo entrega e precisei parar por segurança, etc."></textarea>
+    </div>
+
+    <button type="submit" class="cta">Gerar meu recurso agora →</button>
+    <p class="steps-left">Leva menos de 2 minutos. Seu recurso é gerado na hora, aqui mesmo.</p>
+  </form>
+
+  <div class="card" id="resultado">
+    <h2>📄 Seu recurso está pronto</h2>
+    <div class="doc-box" id="texto_recurso"></div>
+    <div class="actions">
+      <button class="btn primary" id="btn_copiar">Copiar texto</button>
+      <button class="btn" id="btn_baixar">Baixar como .txt</button>
+    </div>
+
+    <div class="protocolo" id="bloco_protocolo"></div>
+
+    <div class="disclaimer">
+      <b>Importante:</b> este documento foi gerado com base nos dados que você informou e nos fundamentos legais aplicáveis ao seu caso. Ele aumenta suas chances de defesa, mas a decisão final é sempre do órgão de trânsito (JARI/CETRAN/CONTRAN) — nenhum serviço pode garantir 100% de anulação. Revise os dados antes de protocolar e, em casos de maior valor ou gravidade (ex: perda de CNH), considere também a orientação de um advogado.
+    </div>
+  </div>
+
+  <footer>RecursoFácil — recurso.facil@protonmail.com (exemplo) • Este material não substitui aconselhamento jurídico individual.</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+$('orgao').addEventListener('change', e=>{
+  $('bloco_uf').style.display = e.target.value === 'detran' ? 'block' : 'none';
+});
+$('pagou').addEventListener('change', e=>{
+  $('alerta_pagou').classList.toggle('show', e.target.value === 'sim_desconto');
+});
+
+const ARGUMENTOS = {
+  velocidade: {
+    titulo: "excesso de velocidade",
+    corpo: `Requer-se a verificação da regularidade do equipamento de aferição utilizado na autuação, nos termos das normas de metrologia legal do INMETRO, incluindo certificado de aferição válido na data da infração. Requer-se também a confirmação de que a sinalização de limite de velocidade da via estava visível, regular e em conformidade com as normas do CONTRAN no momento e local da autuação, bem como a observância da margem de tolerância de aferição aplicável ao equipamento.`
+  },
+  sinal: {
+    titulo: "avanço de sinal vermelho",
+    corpo: `Requer-se a análise do tempo de abertura do sinal amarelo no semáforo indicado, bem como das condições de visibilidade e sinalização no local, considerando que falhas na temporização ou na visibilidade do semáforo podem comprometer a regularidade da autuação. Requer-se, ainda, que o órgão autuador apresente registro fotográfico ou de vídeo que comprove de forma inequívoca a infração apontada, conforme exigido pelo art. 280 do Código de Trânsito Brasileiro (CTB).`
+  },
+  estacionamento: {
+    titulo: "estacionamento ou parada proibida",
+    corpo: `Requer-se a verificação da existência e da regularidade da sinalização de proibição de estacionar/parar no local e data indicados, já que a ausência ou deficiência da sinalização compromete a validade da autuação. Solicita-se também que se considere a eventual necessidade emergencial que levou à parada do veículo, quando aplicável ao caso concreto.`
+  },
+  celular: {
+    titulo: "uso de celular ao dirigir",
+    corpo: `Requer-se que o órgão autuador comprove, de forma clara e inequívoca, o uso efetivo e manual do aparelho celular no momento da condução, não sendo suficiente a mera suposição do agente de trânsito, nos termos do princípio da ampla defesa (art. 5º, LV, da Constituição Federal) e do art. 280 do CTB, que exige a descrição precisa dos fatos que caracterizam a infração.`
+  },
+  cinto: {
+    titulo: "não uso do cinto de segurança",
+    corpo: `Requer-se a revisão da constatação da infração, tendo em vista a possibilidade de erro de observação do agente de trânsito à distância, especialmente em autuações realizadas sem abordagem direta ao condutor.`
+  },
+  documentacao: {
+    titulo: "documento (CNH/CRLV) vencido",
+    corpo: `Requer-se a verificação da data de validade do documento apontado como vencido, considerando eventuais prazos de tolerância previstos em resoluções do CONTRAN vigentes na data da autuação, bem como a possibilidade de regularização já realizada pelo condutor/proprietário antes ou após a autuação.`
+  },
+  ultrapassagem: {
+    titulo: "ultrapassagem em local proibido",
+    corpo: `Requer-se a análise da sinalização horizontal e vertical do trecho da via no momento da autuação, bem como das condições de visibilidade, uma vez que falhas de sinalização ou situações de risco iminente podem justificar a manobra realizada.`
+  },
+  outra: {
+    titulo: "infração apontada",
+    corpo: `Requer-se a revisão integral do auto de infração, nos termos do art. 280 do CTB, que exige a descrição precisa e inequívoca dos fatos, local, data, hora e identificação do agente ou equipamento responsável pela autuação, sob pena de nulidade do auto por ausência dos requisitos legais.`
+  }
+};
+
+const NOMES_ORGAO = {
+  detran: "Detran",
+  prf: "Polícia Rodoviária Federal (PRF)",
+  dnit: "DNIT",
+  municipal: "órgão de trânsito municipal",
+  nao_sei: "órgão autuador"
+};
+
+const DESTINATARIO = {
+  defesa_previa: "Ilustríssimo(a) Senhor(a) responsável pela análise de Defesa Prévia",
+  jari: "Ilustríssimo(a) Senhor(a) Presidente da Junta Administrativa de Recursos de Infrações (JARI)",
+  cetran: "Ilustríssimo(a) Senhor(a) Presidente do Conselho Estadual/Nacional de Trânsito (CETRAN/CONTRAN)"
+};
+
+function formatarData(iso){
+  if(!iso) return "(não informada)";
+  const [a,m,d] = iso.split('-');
+  return `${d}/${m}/${a}`;
+}
+
+function gerarTextoRecurso(dados){
+  const arg = ARGUMENTOS[dados.infracao] || ARGUMENTOS.outra;
+  const destinatario = DESTINATARIO[dados.fase] || DESTINATARIO.jari;
+  const orgaoNome = dados.orgao === 'detran' && dados.uf ? `Detran-${dados.uf}` : NOMES_ORGAO[dados.orgao];
+
+  let avisoReincidencia = '';
+  if(dados.reincidente === 'sim'){
+    avisoReincidencia = `\n\nO(a) requerente informa, ainda, que não possui registro de penalidade anterior pela mesma infração no período de 12 (doze) meses apto a gerar agravamento da penalidade, requerendo que isso seja considerado na análise, caso aplicável.`;
+  }
+
+  let detalheTexto = '';
+  if(dados.detalhe && dados.detalhe.trim().length > 0){
+    detalheTexto = `\n\nAlém dos fundamentos legais acima, destaca-se a seguinte circunstância relevante para a análise do presente caso: "${dados.detalhe.trim()}". Tal circunstância deve ser considerada na avaliação da razoabilidade e da regularidade da autuação.`;
+  }
+
+  return `${destinatario}
+Referente: ${orgaoNome}
+
+ASSUNTO: RECURSO/DEFESA CONTRA AUTO DE INFRAÇÃO DE TRÂNSITO
+
+REQUERENTE: ${dados.nome}
+CPF: ${dados.cpf}
+CNH: ${dados.cnh || '(não informada)'}
+ENDEREÇO: ${dados.endereco}
+
+DADOS DA AUTUAÇÃO
+Auto de Infração (AIT) nº: ${dados.ait || '(a confirmar na notificação)'}
+Placa do veículo: ${dados.placa}
+Data da infração: ${formatarData(dados.data_infracao)}
+Local: ${dados.local || '(não informado)'}
+Infração apontada: ${arg.titulo}
+
+DOS FATOS E FUNDAMENTOS
+
+O(a) requerente, devidamente qualificado(a) acima, vem, respeitosamente, apresentar o presente recurso contra o Auto de Infração acima referenciado, com fundamento no art. 5º, LV, da Constituição Federal (ampla defesa e contraditório) e nos arts. 280 e 281 do Código de Trânsito Brasileiro, pelos motivos a seguir expostos.
+
+${arg.corpo}${detalheTexto}${avisoReincidencia}
+
+DO PEDIDO
+
+Diante do exposto, requer-se o conhecimento e provimento do presente recurso, para que seja declarada a nulidade ou, alternativamente, o cancelamento da penalidade imposta no Auto de Infração acima identificado, com o consequente arquivamento do processo administrativo e a exclusão de eventual pontuação na Carteira Nacional de Habilitação do(a) requerente.
+
+Requer-se, subsidiariamente, caso não acolhido o pedido principal, a conversão da penalidade em advertência por escrito, nos termos do art. 267 do CTB, quando aplicável ao caso.
+
+Nestes termos, pede deferimento.
+
+[Cidade], ${formatarData(new Date().toISOString().slice(0,10))}
+
+
+_____________________________________
+${dados.nome}
+CPF: ${dados.cpf}`;
+}
+
+function linkProtocolo(dados){
+  const universal = "https://www.gov.br/pt-br/servicos/apresentar-recurso-contra-penalidade-de-multa-de-transito";
+  if(dados.orgao === 'detran' && dados.uf){
+    const sigla = dados.uf.toLowerCase();
+    return {
+      titulo: `Onde protocolar — Detran-${dados.uf}`,
+      principal: { label: `Portal do Detran-${dados.uf}`, url: `https://www.detran.${sigla}.gov.br` },
+      alternativo: { label: "Portal único gov.br (serviço de recurso de multa)", url: universal },
+      passos: "No site do Detran do seu estado, procure por \"Serviços\" → \"Recursos de Multa\" (pode exigir login gov.br nível Prata/Ouro). Caso não encontre, use o portal gov.br acima — ele direciona automaticamente para o órgão correto."
+    };
+  }
+  if(dados.orgao === 'prf'){
+    return {
+      titulo: "Onde protocolar — PRF",
+      principal: { label: "Portal PRF (gov.br/prf)", url: "https://www.gov.br/prf/pt-br" },
+      alternativo: { label: "Portal único gov.br (serviço de recurso de multa)", url: universal },
+      passos: "A PRF exige o formulário específico de recurso disponível no portal gov.br. Pelo portal único acima, selecione o órgão \"Polícia Rodoviária Federal\" para ser direcionado ao formulário correto."
+    };
+  }
+  if(dados.orgao === 'dnit'){
+    return {
+      titulo: "Onde protocolar — DNIT",
+      principal: { label: "Portal de recurso DNIT (gov.br)", url: universal },
+      alternativo: { label: "Portal institucional do DNIT", url: "https://www.gov.br/dnit/pt-br" },
+      passos: "Em multas de rodovias federais autuadas pelo DNIT, o recurso de 2ª instância vai para o CONTRAN (não o CETRAN estadual). Use o portal gov.br para protocolar."
+    };
+  }
+  if(dados.orgao === 'municipal'){
+    return {
+      titulo: "Onde protocolar — Órgão Municipal",
+      principal: { label: "Portal único gov.br (tente primeiro)", url: universal },
+      alternativo: null,
+      passos: "Cada prefeitura tem seu próprio sistema. Pesquise \"prefeitura de [sua cidade] recurso de multa\" ou confira o endereço indicado na própria notificação que você recebeu — ele costuma trazer o link exato."
+    };
+  }
+  return {
+    titulo: "Onde protocolar",
+    principal: { label: "Portal único gov.br (serviço de recurso de multa)", url: universal },
+    alternativo: null,
+    passos: "Se você não tem certeza de qual órgão autuou a multa, confira o cabeçalho da notificação que você recebeu — ele informa o órgão responsável. O portal gov.br acima direciona para o lugar certo na maioria dos casos."
+  };
+}
+
+document.getElementById('form').addEventListener('submit', function(e){
+  e.preventDefault();
+
+  const dados = {
+    nome: $('nome').value.trim(),
+    cpf: $('cpf').value.trim(),
+    cnh: $('cnh').value.trim(),
+    placa: $('placa').value.trim().toUpperCase(),
+    endereco: $('endereco').value.trim(),
+    ait: $('ait').value.trim(),
+    data_infracao: $('data_infracao').value,
+    local: $('local').value.trim(),
+    orgao: $('orgao').value,
+    uf: $('uf').value,
+    infracao: $('infracao').value,
+    fase: $('fase').value,
+    pagou: $('pagou').value,
+    reincidente: $('reincidente').value,
+    detalhe: $('detalhe').value
+  };
+
+  const texto = gerarTextoRecurso(dados);
+  $('texto_recurso').textContent = texto;
+
+  const prot = linkProtocolo(dados);
+  let html = `<h3>${prot.titulo}</h3>`;
+  html += `<a href="${prot.principal.url}" target="_blank" rel="noopener">${prot.principal.label} ↗</a>`;
+  if(prot.alternativo){
+    html += `<div style="margin-top:8px;"><a href="${prot.alternativo.url}" target="_blank" rel="noopener" style="background:#fff;color:#1456c4;border:1px solid #1456c4;">${prot.alternativo.label} ↗</a></div>`;
+  }
+  html += `<p class="pass">${prot.passos}</p>`;
+  $('bloco_protocolo').innerHTML = html;
+
+  $('resultado').classList.add('show');
+  $('resultado').scrollIntoView({behavior:'smooth', block:'start'});
+
+  window.__textoAtual = texto;
+});
+
+function showToast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+$('btn_copiar').addEventListener('click', ()=>{
+  const texto = window.__textoAtual || '';
+  navigator.clipboard.writeText(texto).then(()=>{
+    showToast('Texto copiado!');
+  }).catch(()=>{
+    const ta = document.createElement('textarea');
+    ta.value = texto; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('Texto copiado!');
+  });
+});
+
+$('btn_baixar').addEventListener('click', ()=>{
+  const texto = window.__textoAtual || '';
+  const blob = new Blob([texto], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'recurso_de_multa_recursofacil.txt';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Arquivo baixado!');
+});
+</script>
+</body>
+</html>
